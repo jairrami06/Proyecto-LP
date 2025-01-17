@@ -35,5 +35,30 @@ class CitaController {
         $citas = $this->model->obtenerCitas();
         echo json_encode($citas);
     }
+
+    public function editarCita($data) {
+        if (!isset($data['id'], $data['psicologo_id'], $data['fecha'], $data['hora'], $data['modalidad'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Faltan datos para editar la cita']);
+            return;
+        }
+
+        $resultado = $this->model->editarCita(
+            $data['id'],
+            $data['psicologo_id'],
+            $data['fecha'],
+            $data['hora'],
+            $data['modalidad']
+        );
+
+        if ($resultado) {
+            http_response_code(201);
+            echo json_encode(['message' => 'Cita editada exitosamente']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Error al editar la cita']);
+        }
+    }
+
 }
 
