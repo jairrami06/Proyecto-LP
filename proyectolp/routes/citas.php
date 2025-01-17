@@ -9,11 +9,12 @@ if ($method === 'GET') {
 } elseif ($method === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     $controller->crearCita($data);
-}  elseif ($method === 'PUT') {
+} elseif ($method === 'PUT') {
     $data = json_decode(file_get_contents('php://input'), true);
     $controller->editarCita($data);
-    
-}else {
+} elseif ($method === 'DELETE') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $controller->eliminarCita($data);
+} else {
     echo json_encode(["message" => "Método no soportado"]);
 }
-?>

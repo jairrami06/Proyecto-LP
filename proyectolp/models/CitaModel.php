@@ -20,6 +20,13 @@ class CitaModel {
         return $stmt->execute([$psicologo_id, $fecha, $hora, $modalidad, $id]);
     }
 
+    public function eliminarCita($id) {
+        $query = "DELETE FROM cita WHERE id = ?";
+        $stmt = $this->db->prepare($query);
+        return $stmt->execute([$id]);
+    }
+    
+
     public function obtenerCitas() {
         $query = "SELECT c.id, c.fecha, c.hora, c.modalidad, p.nombre AS psicologo_nombre 
                   FROM cita c

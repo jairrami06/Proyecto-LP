@@ -60,5 +60,24 @@ class CitaController {
         }
     }
 
+    public function eliminarCita($data) {
+        if (!isset($data['id'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Falta el ID para eliminar la cita']);
+            return;
+        }
+    
+        $resultado = $this->model->eliminarCita($data['id']);
+    
+        if ($resultado) {
+            http_response_code(200);
+            echo json_encode(['message' => 'Cita eliminada exitosamente']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Error al eliminar la cita']);
+        }
+    }
+    
+
 }
 
