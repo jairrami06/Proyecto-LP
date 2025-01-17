@@ -20,5 +20,11 @@ class ReservaModel{
         $stmt->execute([$cita_id]);
         return $stmt->fetchColumn() == 0; // Retorna true si no hay reserva
     }
+
+    public function eliminarReserva($reserva_id) {
+        $query = "DELETE FROM reserva WHERE id = ?";
+        $stmt = $this->db->prepare($query);
+        return $stmt->execute([$reserva_id]);
+    }
     
 }

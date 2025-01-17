@@ -33,5 +33,25 @@ class ReservaController {
             echo json_encode(['error' => 'La cita ya está reservada']);
         }
     }
+
+    public function cancelarReserva($data) {
+        if (!isset($data['id'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Faltan datos para cancelar la reserva']);
+            return;
+        }
+
+        $reserva_id = $data['id'];
+        $resultado = $this->model->eliminarReserva($reserva_id);
+
+        if ($resultado) {
+            http_response_code(200);
+            echo json_encode(['message' => 'Reserva cancelada exitosamente']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Error al cancelar la reserva']);
+        }
+    }
+
 }
 ?>
