@@ -31,10 +31,24 @@ class CitaController {
         }
     }
 
-    public function verCitas() {
-        $citas = $this->model->obtenerCitas();
-        echo json_encode($citas);
+    public function obtenerCitasPorPsicologo($psicologoId) {
+        // Validar que se recibió el id del psicólogo
+        if (!$psicologoId) {
+            echo json_encode(["success" => false, "message" => "El ID del psicólogo es requerido."]);
+            return;
+        }
+    
+        // Obtener las citas del psicólogo
+        $citas = $this->model->obtenerCitasPorPsicologo($psicologoId);
+    
+        // Verificar si hay citas
+        if (empty($citas)) {
+            echo json_encode(["success" => true, "message" => "No hay citas para este psicólogo.", "data" => []]);
+        } else {
+            echo json_encode(["success" => true, "data" => $citas]);
+        }
     }
+    
 
     public function editarCita($data) {
         if (!isset($data['id'], $data['psicologo_id'], $data['fecha'], $data['hora'], $data['modalidad'])) {

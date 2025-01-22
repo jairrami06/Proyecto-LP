@@ -5,7 +5,10 @@ $controller = new CitaController();
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    $controller->verCitas();
+    $urlParts = explode('/', $_SERVER['REQUEST_URI']); 
+    $psicologoId = $urlParts[count($urlParts) - 1];
+
+    $controller->obtenerCitasPorPsicologo($psicologoId);
 } elseif ($method === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     $controller->crearCita($data);

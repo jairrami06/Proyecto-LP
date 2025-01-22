@@ -10,6 +10,21 @@ class ReservaModel
         $this->db = Database::getInstance()->getConnection();
     }
 
+    public function obtenerReservasPorPsicologo($idPsicologo) {
+        $sql = "SELECT r.id AS reserva_id, r.fecha_reserva, c.fecha AS fecha_cita, c.hora, 
+                       c.modalidad, u.nombre AS paciente_nombre 
+                FROM reserva r
+                INNER JOIN cita c ON r.cita_id = c.id
+                INNER JOIN paciente p ON r.paciente_id = p.id
+                INNER JOIN usuario u ON p.id = u.id
+                WHERE c.psicologo_id = ?";
+    
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$idPsicologo]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+
     public function reservarCita($paciente_id, $cita_id)
     {
         $query = "INSERT INTO reserva (paciente_id, cita_id) VALUES (?, ?)";

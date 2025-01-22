@@ -8,6 +8,19 @@ class CitaModel {
         $this->db = Database::getInstance()->getConnection();
     }
 
+    public function obtenerCitasPorPsicologo($psicologoId) {
+        $query = "SELECT c.id, c.fecha, c.hora, c.modalidad, r.paciente_id
+                  FROM cita c
+                  LEFT JOIN reserva r ON c.id = r.cita_id
+                  WHERE c.psicologo_id = :psicologo_id";
+    
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':psicologo_id', $psicologoId, PDO::PARAM_INT);
+        $stmt->execute();
+    
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function crearCita($psicologo_id, $fecha, $hora, $modalidad) {
         $query = "INSERT INTO cita (psicologo_id, fecha, hora, modalidad) VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($query);
@@ -25,7 +38,7 @@ class CitaModel {
         $stmt = $this->db->prepare($query);
         return $stmt->execute([$id]);
     }
-    
+        
 
     public function obtenerCitas() {
         $query = "SELECT c.id, c.fecha, c.hora, c.modalidad, p.nombre AS psicologo_nombre 

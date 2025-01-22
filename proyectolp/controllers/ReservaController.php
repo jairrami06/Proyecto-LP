@@ -10,6 +10,22 @@ class ReservaController
         $this->model = new ReservaModel();
     }
 
+    public function obtenerReservasPorPsicologo($idPsicologo) {
+        if (!is_numeric($idPsicologo)) {
+            echo json_encode(["success" => false, "message" => "ID del psicólogo inválido."]);
+            return;
+        }
+    
+         Obtener reservas del modelo
+        $reservas = $this->model->obtenerReservasPorPsicologo($idPsicologo);
+    
+        echo json_encode([
+            "success" => true,
+            "reservas" => $reservas
+        ]);
+    }
+    
+
     public function reservarCita($data)
     {
         if (!isset($data['paciente_id'], $data['cita_id'])) {
@@ -32,7 +48,7 @@ class ReservaController
                 echo json_encode(['error' => 'Error al reservar la cita']);
             }
         } else {
-            http_response_code(400); // La cita ya está reservada
+            http_response_code(400); 
             echo json_encode(['error' => 'La cita ya está reservada']);
         }
     }

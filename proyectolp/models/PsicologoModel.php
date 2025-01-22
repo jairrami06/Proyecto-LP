@@ -19,6 +19,28 @@ class PsicologoModel{
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
+    public function crearPsicologo($nombre, $usuario, $contrasena, $email, $especialidad) {
+        $this->db->beginTransaction();
+
+        try {
+            $queryUsuario = "INSERT INTO usuario (nombre, usuario, contrasena, tipo) VALUES (?, ?, ?, 'psicologo')";
+            $stmtUsuario = $this->db->prepare($queryUsuario);
+            $hashedPassword = password_hash($contrasena, PASSWORD_BCRYPT);
+            $stmtUsuario->execute([$nombre, $usuario, $hashedPassword]);
+
+            $usuarioId = $this->db->lastInsertId();
+
+            $queryPsicologo = "INSERT INTO psicologo (id, email, especialidad) VALUES (?, ?, ?)";
+            $stmtPsicologo = $this->db->prepare($queryPsicologo);
+            $stmtPsicologo->execute([$usuarioId, $email, $especialidad]);
+
+            $this->db->commit();
+            return $usuarioId;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
     
     
 }

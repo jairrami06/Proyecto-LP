@@ -29,6 +29,29 @@ class PsicologoController {
         }
     }
     
+    public function crearPsicologo($data) {
+        if (!isset($data['nombre'], $data['usuario'], $data['contrasena'], $data['email'], $data['especialidad'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Faltan datos para crear el psicólogo']);
+            return;
+        }
+
+        $psicologoId = $this->model->crearPsicologo(
+            $data['nombre'],
+            $data['usuario'],
+            $data['contrasena'],
+            $data['email'],
+            $data['especialidad']
+        );
+
+        if ($psicologoId) {
+            http_response_code(201);
+            echo json_encode(['message' => 'Psicólogo creado exitosamente', 'id' => $psicologoId]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Error al crear el psicólogo']);
+        }
+    }
 
 }
 
