@@ -30,7 +30,6 @@ const Login = () => {
             const data = { usuario, contrasena };
     
             const response = await axios.post(`${BASE_URL}/login`, data);
-            console.log('Respuesta recibida:', response.data);
     
             localStorage.setItem('token', response.data.token);
     
@@ -86,7 +85,6 @@ const Login = () => {
 
     return (
         <div className="flex justify-center items-center h-screen bg-gray-100">
-            {/* Formulario de inicio de sesión */}
             {!showRegisterForm ? (
                 <form
                     onSubmit={handleLoginSubmit}

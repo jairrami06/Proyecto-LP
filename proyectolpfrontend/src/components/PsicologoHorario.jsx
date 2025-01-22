@@ -26,8 +26,8 @@ const PsicologoHorario = () => {
   useEffect(() => {
     const fetchCitasYReservas = async () => {
       try {
-        const citasResponse = await axios.get(`${BASE_URL}/citas/3`);
-        const reservasResponse = await axios.get(`${BASE_URL}/reservas/3`);
+        const citasResponse = await axios.get(`${BASE_URL}/citas/${psicologoId}`);
+        const reservasResponse = await axios.get(`${BASE_URL}/reservas/${psicologoId}`);
 
         const reservasEvents = reservasResponse.data.reservas.map((reserva) => ({
           id: `reserva-${reserva.reserva_id}`,
@@ -140,7 +140,6 @@ const PsicologoHorario = () => {
           />
         </Box>
       )}
-      {/* Pasar el psicologoId al modal */}
       <AgregarCita open={openModal} handleClose={handleCloseModal} psicologoId={psicologoId} />
     </Box>
   );
