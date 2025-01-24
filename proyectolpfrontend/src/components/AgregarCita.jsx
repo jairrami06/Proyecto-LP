@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Modal, Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, CircularProgress } from "@mui/material";
 import axios from "axios";
+import { BASE_URL } from '../api/config';
 
-const AgregarCita = ({ open, handleClose, psicologoId }) => {
+const AgregarCita = ({ open, handleClose, psicologoId, onSuccess }) => {
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [modalidad, setModalidad] = useState("virtual");
@@ -21,9 +22,9 @@ const AgregarCita = ({ open, handleClose, psicologoId }) => {
         hora,
         modalidad,
       });
-
-      if (response.data.success) {
+      if (response.data.message === "Cita creada exitosamente") {
         alert("Cita agregada con éxito");
+        onSuccess();
         handleClose();
       } else {
         setError("Hubo un error al agregar la cita");

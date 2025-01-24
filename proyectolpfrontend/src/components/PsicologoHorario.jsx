@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -23,42 +23,51 @@ const PsicologoHorario = () => {
     setOpenModal(false);
   };
 
-  useEffect(() => {
-    const fetchCitasYReservas = async () => {
-      try {
-        const citasResponse = await axios.get(`${BASE_URL}/citas/${psicologoId}`);
+  const fetchCitasYReservas = useCallback(async () => {
+    setLoading(true);
+    try {
+      const citasResponse = await axios.get(`${BASE_URL}/citas/${psicologoId}`);
         const reservasResponse = await axios.get(`${BASE_URL}/reservas/${psicologoId}`);
+        let citas = [];
+        let reservas = [];
 
-        const reservasEvents = reservasResponse.data.reservas.map((reserva) => ({
-          id: `reserva-${reserva.reserva_id}`,
-          title: `Reserva(${reserva.modalidad}): ${reserva.paciente_nombre}`,
-          start: `${reserva.fecha_cita}T${reserva.hora}`,
-          color: "#4CAF50",
+        if(citasResponse.data.data) {
+          citas = citasResponse.data.data;
+        } 
+        if(reservasResponse.data.reservas) {
+          reservas = reservasResponse.data.reservas;
+        }
+
+      const reservasEvents = reservas.map((reserva) => ({
+        id: `reserva-${reserva.reserva_id}`,
+        title: `Reserva(${reserva.modalidad}): ${reserva.paciente_nombre}`,
+        start: `${reserva.fecha_cita}T${reserva.hora}`,
+        color: "#4CAF50",
+      }));
+
+      const citasEvents = citas.filter((cita) => {
+          return !reservasEvents.some(
+            (reserva) => reserva.start === `${cita.fecha}T${cita.hora}`
+          );
+        })
+        .map((cita) => ({
+          id: `cita-${cita.id}`,
+          title: `Cita(${cita.modalidad}): Disponible`,
+          start: `${cita.fecha}T${cita.hora}`,
+          color: "#2196F3",
         }));
 
-        const citasEvents = citasResponse.data.data
-          .filter((cita) => {
-            return !reservasEvents.some(
-              (reserva) => reserva.start === `${cita.fecha}T${cita.hora}`
-            );
-          })
-          .map((cita) => ({
-            id: `cita-${cita.id}`,
-            title: `Cita(${cita.modalidad}): Disponible`,
-            start: `${cita.fecha}T${cita.hora}`,
-            color: "#2196F3",
-          }));
-
-        setEvents([...reservasEvents, ...citasEvents]);
-      } catch (error) {
-        console.error("Error al cargar citas y reservas:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCitasYReservas();
+      setEvents([...reservasEvents, ...citasEvents]);
+    } catch (error) {
+      console.error("Error al cargar citas y reservas:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [psicologoId]);
+
+  useEffect(() => {
+    fetchCitasYReservas();
+  }, [fetchCitasYReservas]);
 
   return (
     <Box
@@ -111,36 +120,29 @@ const PsicologoHorario = () => {
             plugins={[dayGridPlugin, timeGridPlugin]}
             initialView="timeGridWeek"
             headerToolbar={{
-              left: "prev,next today",
+              left: "prev,next",
               center: "title",
               right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
             events={events}
-            slotMinHeight={10}
             locale="es"
             slotMinTime="08:00:00"
             slotMaxTime="17:59:59"
             height="100%"
             themeSystem="standard"
             allDaySlot={false}
-            customButtons={{
-              prev: {
-                text: "⟵ Anterior",
-              },
-              next: {
-                text: "Siguiente ⟶",
-              },
-            }}
             buttonText={{
               today: "Hoy",
               month: "Mes",
               week: "Semana",
               day: "Día",
+              prev: "<",
+              next: ">",
             }}
           />
         </Box>
       )}
-      <AgregarCita open={openModal} handleClose={handleCloseModal} psicologoId={psicologoId} />
+      <AgregarCita open={openModal} handleClose={handleCloseModal} psicologoId={psicologoId} onSuccess={fetchCitasYReservas} />
     </Box>
   );
 };
