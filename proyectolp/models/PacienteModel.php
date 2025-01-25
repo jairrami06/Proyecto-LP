@@ -1,14 +1,32 @@
 <?php
 require_once __DIR__ . "/../config/db.php";
 
-class PacienteModel {
+class PacienteModel
+{
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function crearPaciente($nombre, $usuario, $contrasena) {
+    public function obtenerNombrePaciente($pacienteId)
+    {
+        $query = "SELECT u.nombre FROM usuario u INNER JOIN paciente p ON u.id = p.id WHERE p.id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$pacienteId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($result) {
+            return $result['nombre'];
+        } else {
+            return null;
+        }
+    }
+   
+    
+
+    public function crearPaciente($nombre, $usuario, $contrasena)
+    {
         $this->db->beginTransaction();
 
         try {
@@ -30,5 +48,4 @@ class PacienteModel {
             return false;
         }
     }
-
 }

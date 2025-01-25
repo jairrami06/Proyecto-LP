@@ -8,6 +8,24 @@ class PacienteController {
         $this->model = new PacienteModel();
     }
 
+
+    public function obtenerNombrePaciente($paciente_id) {
+        if (!$paciente_id) {
+            echo json_encode(["success" => false, "message" => "El ID del psicólogo es requerido."]);
+            return;
+        }
+        $nombre = $this->model->obtenerNombrePaciente($paciente_id);
+        if ($nombre) {
+            http_response_code(200); 
+            echo json_encode(['nombre' => $nombre]);
+        } else {
+            http_response_code(404); 
+            echo json_encode(['error' => 'Paciente no encontrado']); 
+        }
+    }
+
+
+
     public function crearPaciente($data) {
         if (!isset($data['nombre'], $data['usuario'], $data['contrasena'])) {
             http_response_code(400);

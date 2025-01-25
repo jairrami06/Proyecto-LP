@@ -22,7 +22,10 @@ if (count($request) > 1) {
         require_once "./routes/citas.php";
     } elseif ($route === "login") {
         require_once "./routes/usuarios.php";
-    } else {
+    } 
+    elseif ($route === "psicologoList") {
+        require_once "./routes/psicologoList.php";
+    }else {
         http_response_code(404);
         echo json_encode(["message" => "Ruta no encontrada"]);
     }

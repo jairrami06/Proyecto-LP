@@ -16,7 +16,7 @@ class ReservaController
             return;
         }
     
-         Obtener reservas del modelo
+         //Obtener reservas del modelo
         $reservas = $this->model->obtenerReservasPorPsicologo($idPsicologo);
     
         echo json_encode([

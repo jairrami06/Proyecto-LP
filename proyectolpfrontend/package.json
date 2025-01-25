@@ -17,6 +17,7 @@
     "@mui/material": "^6.4.0",
     "@vitejs/plugin-react": "^4.3.4",
     "axios": "^1.7.9",
+    "proyectolpfrontend": "file:",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.1.2"
