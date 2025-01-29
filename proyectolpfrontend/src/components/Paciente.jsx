@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -10,19 +10,19 @@ import { BASE_URL } from "../api/config";
 const Paciente = () => {
   const location = useLocation();
   const paciente_id = location.state?.userId;
-
   const [nombrePaciente, setNombrePaciente] = useState(null);
   const [psicologoList, setPsicologoList] = useState([]);
   const [selectedPsicologo, setSelectedPsicologo] = useState("");
   const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState([]);
 
-  // Obtener nombre del paciente
+
+  /* Busca y obtiene el nombre del paciente con su id en useLocation */
   useEffect(() => {
     if (!paciente_id) {
-      console.error("No se encontró el ID del paciente.");
+      console.error("No se encontró el ID del paciente, o no se inció sesión.");
       return;
     }
-
     const obtenerNombre = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/pacientes/${paciente_id}`);
@@ -33,11 +33,10 @@ const Paciente = () => {
         setLoading(false);
       }
     };
-
     obtenerNombre();
   }, [paciente_id]);
 
-  // Obtener lista de psicólogos
+  /* Busca y obtiene la lista de psicólogos para ponerlas en el  */
   useEffect(() => {
     const obtenerPsicologos = async () => {
       try {
@@ -51,10 +50,67 @@ const Paciente = () => {
     obtenerPsicologos();
   }, []);
 
-  // Manejar la selección del psicólogo
+  /* Guarda el psicólogo seleccionado del dropdown */
   const handleSelectPsicologo = (event) => {
     setSelectedPsicologo(event.target.value);
+    console.log(selectedPsicologo);
   };
+
+  const fetchCitas = useCallback(async () => {
+    setLoading(true);
+    try {
+      const citasResponse = await axios.get(`${BASE_URL}/citas/${selectedPsicologo}`);
+      const reservasResponse = await axios.get(`${BASE_URL}/reservas/${selectedPsicologo}`);
+
+      let citas = [];
+      let reservas = [];
+
+      if (citasResponse.data.data) {
+        citas = citasResponse.data.data;
+        console.log("Citas del psicologo: ");
+        console.log(citas)
+      }
+
+      if (reservasResponse.data.reservas) {
+        reservas = reservasResponse.data.reservas;
+        console.log("Reservas del psicologo: ");
+        console.log(reservas);
+      }
+
+      const reservaIds = new Set(reservas.map(reserva => `reserva-${reserva.reserva_id}`));
+
+      const citasEvents = citas.map((cita) => {
+        const idCita = `reserva-${cita.id}`; 
+        const estado = reservaIds.has(idCita) ? 'reservada' : 'disponible'; 
+        const color = estado === 'reservada' ? 'orange' : 'green';
+
+        return {
+          id: `cita-${cita.id}`, 
+          title: `Modalidad: ${cita.modalidad}`,
+          start: `${cita.fecha}T${cita.hora}`,
+          color: color, 
+          extendedProps: {
+            estado: estado,
+          },
+        };
+      });
+      
+      console.log("citasEvents");
+      console.log(citasEvents);
+      setEvents(citasEvents);
+    } catch (error) {
+      console.error("Error al cargar citas:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedPsicologo]);
+
+  useEffect(() => {
+    fetchCitas();
+  }, [fetchCitas]);
+
+
+
 
   return (
     <Box
@@ -76,7 +132,7 @@ const Paciente = () => {
         Bienvenido, {loading ? <CircularProgress size={24} /> : nombrePaciente || "Paciente no encontrado"}
       </Typography>
 
-      {/* Selector de psicólogos */}
+      {/* Dropdown de psicólogos */}
       {loading ? (
         <CircularProgress size={10} />
       ) : (
@@ -99,7 +155,8 @@ const Paciente = () => {
         </Box>
       )}
 
-      {/* Calendario estático */}
+      {/* Calendario */}
+     {selectedPsicologo && ( 
       <Box
         sx={{
           width: "100%",
@@ -113,19 +170,30 @@ const Paciente = () => {
       >
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin]}
-          initialView="dayGridMonth"
+          initialView="timeGridWeek"
           headerToolbar={{
-            left: "prev,next today",
+            left: "prev,next",
             center: "title",
             right: "dayGridMonth,timeGridWeek,timeGridDay",
           }}
-          events={[]} // Calendario vacío
+          events={events}
           locale="es"
+          slotMinTime="08:00:00"
+          slotMaxTime="17:59:59"
           height="100%"
           themeSystem="standard"
           allDaySlot={false}
-        />
+          buttonText={{
+            today: "Hoy",
+            month: "Mes",
+            week: "Semana",
+            day: "Día",
+            prev: "<",
+            next: ">",
+          }}
+        /> 
       </Box>
+        )}
     </Box>
   );
 };
