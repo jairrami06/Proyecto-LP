@@ -3,7 +3,7 @@ import axios from "axios";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import { Box, Typography, CircularProgress, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { Modal, Box, Typography, CircularProgress, Select, MenuItem, FormControl, InputLabel, Button } from "@mui/material";
 import { useLocation } from "react-router-dom";
 import { BASE_URL } from "../api/config";
 
@@ -15,6 +15,11 @@ const Paciente = () => {
   const [selectedPsicologo, setSelectedPsicologo] = useState("");
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [reservationConfirmed, setReservationConfirmed] = useState(false); // Estado para confirmar la reserva
+
+
 
 
   /* Busca y obtiene el nombre del paciente con su id en useLocation */
@@ -50,11 +55,49 @@ const Paciente = () => {
     obtenerPsicologos();
   }, []);
 
+  const handleEventClick = (info) => {
+    setSelectedEvent(info.event);
+    console.log(info.event);
+    setOpenModal(true);
+  };
+
+
+
+
   /* Guarda el psicólogo seleccionado del dropdown */
   const handleSelectPsicologo = (event) => {
     setSelectedPsicologo(event.target.value);
     console.log(selectedPsicologo);
   };
+
+  const handleReserva = async () => {
+    if (!selectedEvent || selectedEvent.extendedProps.estado !== 'disponible') {
+      return;
+    }
+    setLoading(true);
+    try {
+      console.log(paciente_id);
+      console.log(selectedEvent.id);
+      const response = await axios.post(`${BASE_URL}/reservas`, {
+        paciente_id: paciente_id, // Usa el ID del paciente
+        cita_id: selectedEvent.id, // Usa el ID de la cita seleccionada
+      });
+
+      if (response.data.message === 'Cita reservada exitosamente') {
+        //   setOpenModal(false); 
+        setReservationConfirmed(true);
+        fetchCitas();
+      } else {
+        alert('Error al reservar la cita');
+      }
+    } catch (error) {
+      alert('Hubo un error al intentar reservar la cita');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const fetchCitas = useCallback(async () => {
     setLoading(true);
@@ -77,24 +120,26 @@ const Paciente = () => {
         console.log(reservas);
       }
 
-      const reservaIds = new Set(reservas.map(reserva => `reserva-${reserva.reserva_id}`));
+      const reservaIds = new Set(reservas.map(reserva => reserva.cita_id));
+      console.log("id de la citas de las reservas");
+      console.log(reservaIds);
 
       const citasEvents = citas.map((cita) => {
-        const idCita = `reserva-${cita.id}`; 
-        const estado = reservaIds.has(idCita) ? 'reservada' : 'disponible'; 
+        const idCita = cita.id;
+        const estado = reservaIds.has(idCita) ? 'reservada' : 'disponible';
         const color = estado === 'reservada' ? 'orange' : 'green';
 
         return {
-          id: `cita-${cita.id}`, 
+          id: idCita,
           title: `Modalidad: ${cita.modalidad}`,
           start: `${cita.fecha}T${cita.hora}`,
-          color: color, 
+          color: color,
           extendedProps: {
             estado: estado,
           },
         };
       });
-      
+
       console.log("citasEvents");
       console.log(citasEvents);
       setEvents(citasEvents);
@@ -156,44 +201,114 @@ const Paciente = () => {
       )}
 
       {/* Calendario */}
-     {selectedPsicologo && ( 
-      <Box
-        sx={{
-          width: "100%",
-          height: "100%",
-          overflow: "hidden",
-          borderRadius: "8px",
-          boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.1)",
-          backgroundColor: "white",
-          padding: 2,
-        }}
-      >
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin]}
-          initialView="timeGridWeek"
-          headerToolbar={{
-            left: "prev,next",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
+      {selectedPsicologo && (
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            overflow: "hidden",
+            borderRadius: "8px",
+            boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.1)",
+            backgroundColor: "white",
+            padding: 2,
           }}
-          events={events}
-          locale="es"
-          slotMinTime="08:00:00"
-          slotMaxTime="17:59:59"
-          height="100%"
-          themeSystem="standard"
-          allDaySlot={false}
-          buttonText={{
-            today: "Hoy",
-            month: "Mes",
-            week: "Semana",
-            day: "Día",
-            prev: "<",
-            next: ">",
-          }}
-        /> 
-      </Box>
-        )}
+        >
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={{
+              left: "prev,next",
+              center: "title",
+              right: "dayGridMonth,timeGridWeek,timeGridDay",
+            }}
+            events={events}
+            locale="es"
+            slotMinTime="08:00:00"
+            slotMaxTime="17:59:59"
+            height="100%"
+            themeSystem="standard"
+            allDaySlot={false}
+            buttonText={{
+              today: "Hoy",
+              month: "Mes",
+              week: "Semana",
+              day: "Día",
+              prev: "<",
+              next: ">",
+            }}
+            eventClick={handleEventClick}
+          />
+
+          {/* Modal */}
+          <Modal
+            open={openModal}
+            onClose={() => setOpenModal(false)}
+            aria-labelledby="modal-titulo"
+            aria-describedby="modal-descripcion"
+          >
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 400,
+                backgroundColor: 'white',
+                padding: 3,
+                borderRadius: 2,
+                boxShadow: 24,
+              }}
+            >
+              {reservationConfirmed ? (
+                <>
+                  <Typography variant="h6" gutterBottom>
+                    ¡Tu cita ha sido confirmada con éxito!
+                  </Typography>
+                  <Box display="flex" justifyContent="flex-end" marginTop={2}>
+                    <Button onClick={() => {
+                      setOpenModal(false);
+                      setReservationConfirmed(false);
+                    }} color="primary">
+                      Cerrar
+                    </Button>
+                  </Box>
+                </>
+              ) : (
+                // Contenido del modal de la cita (antes de confirmar)
+                <>
+                  <Typography variant="h6" gutterBottom>
+                    Detalles de la Cita
+                  </Typography>
+                  {selectedEvent && (
+                    <>
+                      <Typography variant="h6">{selectedEvent.title}</Typography>
+                      <Typography variant="body1">Fecha: {selectedEvent.start.toLocaleString()}</Typography>
+                      <Typography variant="body1">Estado: {selectedEvent.extendedProps.estado}</Typography>
+
+                      {/* Botón de reservar si la cita está disponible */}
+                      {selectedEvent.extendedProps.estado === 'disponible' && !loading && (
+                        <Box display="flex" justifyContent="flex-end" marginTop={2}>
+                          <Button onClick={handleReserva} color="primary">
+                            Reservar
+                          </Button>
+                        </Box>
+                      )}
+
+                    </>
+                  )}
+                  <Box display="flex" justifyContent="flex-end" marginTop={2}>
+                    <Button onClick={() => setOpenModal(false)} color="primary">
+                      Cerrar
+                    </Button>
+                  </Box>
+                </>
+              )}
+            </Box>
+          </Modal>
+
+
+        </Box>
+      )}
     </Box>
   );
 };

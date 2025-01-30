@@ -11,7 +11,7 @@ class ReservaModel
     }
 
     public function obtenerReservasPorPsicologo($idPsicologo) {
-        $sql = "SELECT r.id AS reserva_id, r.fecha_reserva, c.fecha AS fecha_cita, c.hora, 
+        $sql = "SELECT r.id AS reserva_id, r.cita_id, r.fecha_reserva, c.fecha AS fecha_cita, c.hora, 
                        c.modalidad, u.nombre AS paciente_nombre 
                 FROM reserva r
                 INNER JOIN cita c ON r.cita_id = c.id
